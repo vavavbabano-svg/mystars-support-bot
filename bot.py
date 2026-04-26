@@ -1,6 +1,5 @@
 import os
 import logging
-import asyncio
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
@@ -49,7 +48,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Произошла ошибка. Попробуйте позже.")
 
 
-async def main():
+def main():
     if not BOT_TOKEN:
         logger.error("❌ BOT_TOKEN не задан!")
         return
@@ -61,16 +60,8 @@ async def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
     logger.info("✅ Бот запущен")
-    
-    # Запуск с правильным event loop для версии 21.3
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling()
-    
-    # Держим бота активным
-    stop_event = asyncio.Event()
-    await stop_event.wait()
+    app.run_polling()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
