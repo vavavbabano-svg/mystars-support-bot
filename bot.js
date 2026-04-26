@@ -12,6 +12,9 @@ const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
 console.log('✅ Бот запущен');
 
+// Хранилище: кому отвечать (chatId пользователя -> userId)
+const replyTargets = new Map();
+
 // Обработка /start
 bot.onText(/\/start(.*)/, (msg, match) => {
   const chatId = msg.chat.id;
@@ -40,7 +43,7 @@ bot.onText(/\/help/, (msg) => {
   );
 });
 
-// Обработка обычных сообщений
+// Обработка обычных сообщений от пользователей
 bot.on('message', (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
@@ -48,11 +51,37 @@ bot.on('message', (msg) => {
   // Игнорируем команды
   if (!text || text.startsWith('/')) return;
 
-  const from = msg.from.username ? `@${msg.from.username}` : msg.from.id;
+  const userId = msg.from.id;
+  const from = msg.from.username ? `@${msg.from.username}` : userId;
 
-  // Пересылаем админу
+  // Если сообщение от админа
+  if (userId === ADMIN_ID) {
+    // Проверяем, отвечает ли админ на пересланное сообщение
+    if (msg.reply_to_message) {
+      const repliedText = msg.reply_to_message.text || '';
+      
+      // Ищем ID пользователя в пересланном сообщении
+      const match = repliedText.match(/📩 Сообщение от (@?\w+) \((\d+)\):/);
+      if (match) {
+        const targetUserId = parseInt(match[2]);
+        bot.sendMessage(targetUserId, `👨‍💻 Ответ поддержки:\n\n${text}`)
+          .then(() => {
+            bot.sendMessage(chatId, `✅ Ответ отправлен пользователю ${match[1]}`);
+          })
+          .catch((err) => {
+            bot.sendMessage(chatId, `❌ Не удалось отправить ответ: ${err.message}`);
+          });
+        return;
+      }
+    }
+    
+    // Обычное сообщение от админа — игнорируем
+    return;
+  }
+
+  // Сообщение от обычного пользователя — пересылаем админу
   bot.sendMessage(ADMIN_ID,
-    `📩 Сообщение от ${from}:\n\n${text}`
+    `📩 Сообщение от ${from} (${userId}):\n\n${text}`
   ).then(() => {
     bot.sendMessage(chatId, '✅ Ваше сообщение отправлено. Мы ответим в ближайшее время.');
   }).catch((err) => {
