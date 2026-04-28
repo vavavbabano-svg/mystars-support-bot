@@ -10,7 +10,8 @@ if (!BOT_TOKEN || !ADMIN_ID) {
 
 const bot = new Telegraf(BOT_TOKEN);
 
-let currentReplyToUserId = null; // кто ожидает ответа от админа
+// Хранилище: какой пользователь ожидает ответа от админа
+let currentReplyToUserId = null;
 
 bot.start((ctx) => {
     ctx.reply('👋 Добро пожаловать в службу поддержки!\n\nОпишите вашу проблему — я передам её администратору.');
