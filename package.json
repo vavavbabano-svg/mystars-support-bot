@@ -1,0 +1,4 @@
+echo '{}' > package.json
+git add package.json
+git commit -m "Add empty package.json to satisfy Render build"
+git push
