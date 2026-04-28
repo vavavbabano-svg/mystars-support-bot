@@ -79,5 +79,11 @@ bot.on('text', async (ctx) => {
         currentReplyToUserId = targetUserId; // восстанавливаем, чтобы можно было повторить
     }
 });
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.get('/', (req, res) => res.send('Bot is running'));
+app.listen(port, () => console.log(`HTTP server on port ${port}`));
 
 bot.launch().then(() => console.log('🚀 Бот запущен'));
