@@ -1,4 +1,11 @@
-echo '{}' > package.json
-git add package.json
-git commit -m "Add empty package.json to satisfy Render build"
-git push
+{
+  "name": "mystars-support-bot",
+  "version": "1.0.0",
+  "main": "support-bot.js",
+  "scripts": {
+    "start": "node support-bot.js"
+  },
+  "dependencies": {
+    "telegraf": "^4.15.3"
+  }
+}
