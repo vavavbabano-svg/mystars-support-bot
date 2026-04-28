@@ -10,8 +10,7 @@ if (!BOT_TOKEN || !ADMIN_ID) {
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Хранилище: какой пользователь ожидает ответа от админа
-let currentReplyToUserId = null;
+let currentReplyToUserId = null; // кто ожидает ответа от админа
 
 bot.start((ctx) => {
     ctx.reply('👋 Добро пожаловать в службу поддержки!\n\nОпишите вашу проблему — я передам её администратору.');
@@ -21,10 +20,10 @@ bot.help((ctx) => {
     ctx.reply('📌 Просто напишите любое сообщение — администратор получит его и сможет ответить.');
 });
 
-// 1. Пользователь пишет сообщение → пересылаем админу с кнопкой
+// Пользователь пишет → пересылаем админу
 bot.on('text', async (ctx) => {
     const userId = ctx.from.id;
-    if (userId === ADMIN_ID) return; // игнорируем сообщения админа здесь
+    if (userId === ADMIN_ID) return;
 
     const username = ctx.from.username || `id${userId}`;
     const keyboard = Markup.inlineKeyboard([
@@ -44,28 +43,26 @@ bot.on('text', async (ctx) => {
     }
 });
 
-// 2. Админ нажимает кнопку «Ответить»
+// Админ нажимает «Ответить»
 bot.action(/reply_(.+)/, async (ctx) => {
     if (ctx.from.id !== ADMIN_ID) {
         await ctx.answerCbQuery('Нет доступа');
         return;
     }
 
-    const userId = parseInt(ctx.match[1]);
-    currentReplyToUserId = userId;
-
-    await ctx.editMessageText(`✏️ Введите ваш ответ для пользователя ${userId}:`);
+    currentReplyToUserId = parseInt(ctx.match[1]);
+    await ctx.editMessageText(`✏️ Введите ваш ответ для пользователя ${currentReplyToUserId}:`);
     await ctx.answerCbQuery();
 });
 
-// 3. Админ пишет ответ → уходит конкретному пользователю
+// Админ пишет ответ → отправляем пользователю
 bot.on('text', async (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return;
     if (!currentReplyToUserId) return;
 
     const targetUserId = currentReplyToUserId;
     const replyText = ctx.message.text;
-    currentReplyToUserId = null; // сбрасываем после отправки
+    currentReplyToUserId = null;
 
     try {
         await bot.telegram.sendMessage(
@@ -76,14 +73,11 @@ bot.on('text', async (ctx) => {
         await ctx.reply(`✅ Ответ отправлен пользователю ${targetUserId}.`);
     } catch (err) {
         await ctx.reply(`❌ Ошибка: ${err.message}`);
-        currentReplyToUserId = targetUserId; // восстанавливаем, чтобы можно было повторить
+        currentReplyToUserId = targetUserId; // можно попробовать снова
     }
 });
-const express = require('express');
-const app = express();
-const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => res.send('Bot is running'));
-app.listen(port, () => console.log(`HTTP server on port ${port}`));
-
-bot.launch().then(() => console.log('🚀 Бот запущен'));
+bot.launch().then(() => console.log('🚀 Бот успешно запущен')).catch(err => {
+    console.error('❌ Ошибка запуска:', err);
+    process.exit(1);
+});
