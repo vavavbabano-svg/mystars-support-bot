@@ -140,7 +140,7 @@ bot.action(/reply_(.+)/, async (ctx) => {
     const targetUserId = parseInt(ctx.match[1]);
     waitingForReply[ADMIN_ID] = targetUserId;
     
-    await ctx.editMessageCaption(`✏️ Введите ответ для пользователя ${targetUserId}:\n\nПросто напишите сообщение в этот чат.`);
+    await ctx.editMessageText(`✏️ Введите ответ для пользователя ${targetUserId}:\n\nПросто напишите сообщение в этот чат.`);
     await ctx.answerCbQuery();
 });
 
