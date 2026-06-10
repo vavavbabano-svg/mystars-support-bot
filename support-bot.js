@@ -1,4 +1,5 @@
 const { Telegraf } = require('telegraf');
+const http = require('http');
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const ADMIN_ID = parseInt(process.env.ADMIN_ID);
@@ -27,7 +28,6 @@ bot.on('photo', async (ctx) => {
     const username = ctx.from.username || `id${userId}`;
     const caption = ctx.message.caption || 'Без текста';
     
-    // Берём самое большое фото (последнее в массиве)
     const photo = ctx.message.photo[ctx.message.photo.length - 1];
     const fileId = photo.file_id;
 
@@ -85,7 +85,6 @@ bot.on('text', async (ctx) => {
     const userId = ctx.from.id;
     const messageText = ctx.message.text;
 
-    // Если сообщение от администратора
     if (userId === ADMIN_ID) {
         if (waitingForReply[userId]) {
             const targetUserId = waitingForReply[userId];
@@ -107,7 +106,6 @@ bot.on('text', async (ctx) => {
         return;
     }
 
-    // Если сообщение от обычного пользователя
     const username = ctx.from.username || `id${userId}`;
     
     try {
@@ -162,7 +160,7 @@ bot.action(/ignore_(.+)/, async (ctx) => {
         console.error('Ошибка отправки уведомления:', err.message);
     }
     
-    await ctx.editMessageCaption(`🚫 Обращение от пользователя ${targetUserId} помечено как обработанное.`);
+    await ctx.editMessageText(`🚫 Обращение от пользователя ${targetUserId} помечено как обработанное.`);
     await ctx.answerCbQuery('Уведомление отправлено пользователю');
 });
 
@@ -171,6 +169,13 @@ const app = express();
 const port = process.env.PORT || 10000;
 app.get('/', (req, res) => res.send('Bot is running'));
 app.listen(port, () => console.log(`HTTP server on port ${port}`));
+
+// Самопинг каждые 5 минут
+setInterval(() => {
+    http.get('http://localhost:' + port, (res) => {
+        console.log('Self-ping:', res.statusCode);
+    });
+}, 300000);
 
 bot.launch().then(() => console.log('🚀 Бот успешно запущен')).catch(err => {
     console.error('❌ Ошибка запуска:', err);
